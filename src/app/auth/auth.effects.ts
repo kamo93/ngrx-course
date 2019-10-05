@@ -1,13 +1,17 @@
 import { Injectable } from '@angular/core';
-import { Actions } from '@ngrx/effects';
+import { Actions, ofType } from '@ngrx/effects';
+import { filter, tap } from 'rxjs/operators';
+import { login } from './auth.actions';
 
 @Injectable()
 export class AuthEffects {
   constructor(private actions$: Actions) {
-    actions$.subscribe(action => {
-      if (action.type === '[Login page] User login') {
-        localStorage.setItem('user', JSON.stringify(action['user']));
-      }
-    });
+    const login$ = this.actions$.pipe(
+      ofType(login),
+      tap(action => {
+        localStorage.setItem('user', JSON.stringify(action.user));
+      })
+    );
+    login$.subscribe();
   }
 }
