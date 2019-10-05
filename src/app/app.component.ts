@@ -1,8 +1,16 @@
-import {Component, OnInit} from '@angular/core';
-import {select, Store} from "@ngrx/store";
-import {Observable} from "rxjs";
-import {map} from 'rxjs/operators';
-import {NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router} from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { select, Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import {
+  NavigationCancel,
+  NavigationEnd,
+  NavigationError,
+  NavigationStart,
+  Router
+} from '@angular/router';
+import { AppState } from './reducers';
+import { isLoggedIn, isLoggedOut } from './auth/auth.selectors';
+import { logout } from './auth/action-types';
 
 @Component({
   selector: 'app-root',
@@ -10,38 +18,36 @@ import {NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Route
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
+  loading = true;
+  isLoggedIn$: Observable<boolean>;
+  isLoggedOut$: Observable<boolean>;
 
-    loading = true;
+  constructor(private router: Router, private store: Store<AppState>) {}
 
-    constructor(private router: Router) {
-
-    }
-
-    ngOnInit() {
-
-      this.router.events.subscribe(event  => {
-        switch (true) {
-          case event instanceof NavigationStart: {
-            this.loading = true;
-            break;
-          }
-
-          case event instanceof NavigationEnd:
-          case event instanceof NavigationCancel:
-          case event instanceof NavigationError: {
-            this.loading = false;
-            break;
-          }
-          default: {
-            break;
-          }
+  ngOnInit() {
+    this.router.events.subscribe(event => {
+      switch (true) {
+        case event instanceof NavigationStart: {
+          this.loading = true;
+          break;
         }
-      });
 
-    }
+        case event instanceof NavigationEnd:
+        case event instanceof NavigationCancel:
+        case event instanceof NavigationError: {
+          this.loading = false;
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    });
+    this.isLoggedIn$ = this.store.pipe(select(isLoggedIn));
+    this.isLoggedOut$ = this.store.pipe(select(isLoggedOut));
+  }
 
-    logout() {
-
-    }
-
+  logout() {
+    this.store.dispatch(logout());
+  }
 }
