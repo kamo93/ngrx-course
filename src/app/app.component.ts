@@ -10,7 +10,7 @@ import {
 } from '@angular/router';
 import { AppState } from './reducers';
 import { isLoggedIn, isLoggedOut } from './auth/auth.selectors';
-import { logout } from './auth/action-types';
+import { logout, login } from './auth/action-types';
 
 @Component({
   selector: 'app-root',
@@ -21,10 +21,15 @@ export class AppComponent implements OnInit {
   loading = true;
   isLoggedIn$: Observable<boolean>;
   isLoggedOut$: Observable<boolean>;
+  userProfile: string;
 
   constructor(private router: Router, private store: Store<AppState>) {}
 
   ngOnInit() {
+    this.userProfile = localStorage.getItem('user');
+    if (this.userProfile) {
+      this.store.dispatch(login({ user: JSON.parse(this.userProfile) }));
+    }
     this.router.events.subscribe(event => {
       switch (true) {
         case event instanceof NavigationStart: {
