@@ -1,9 +1,13 @@
-import {Component, Inject} from '@angular/core';
-import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
-import {Course} from '../model/course';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {Observable} from 'rxjs';
-import {CoursesHttpService} from '../services/courses-http.service';
+import { courseUpdate } from './../course.action';
+import { AppState } from './../../reducers/index';
+import { Update } from '@ngrx/entity';
+import { Component, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Course } from '../model/course';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Observable } from 'rxjs';
+import { CoursesHttpService } from '../services/courses-http.service';
+import { Store } from '@ngrx/store';
 
 @Component({
   selector: 'course-dialog',
@@ -11,7 +15,6 @@ import {CoursesHttpService} from '../services/courses-http.service';
   styleUrls: ['./edit-course-dialog.component.css']
 })
 export class EditCourseDialogComponent {
-
   form: FormGroup;
 
   dialogTitle: string;
@@ -20,14 +23,14 @@ export class EditCourseDialogComponent {
 
   mode: 'create' | 'update';
 
-  loading$:Observable<boolean>;
+  loading$: Observable<boolean>;
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<EditCourseDialogComponent>,
     @Inject(MAT_DIALOG_DATA) data,
-    private coursesService: CoursesHttpService) {
-
+    private store: Store<AppState>
+  ) {
     this.dialogTitle = data.dialogTitle;
     this.course = data.course;
     this.mode = data.mode;
@@ -41,9 +44,8 @@ export class EditCourseDialogComponent {
 
     if (this.mode == 'update') {
       this.form = this.fb.group(formControls);
-      this.form.patchValue({...data.course});
-    }
-    else if (this.mode == 'create') {
+      this.form.patchValue({ ...data.course });
+    } else if (this.mode == 'create') {
       this.form = this.fb.group({
         ...formControls,
         url: ['', Validators.required],
@@ -57,19 +59,22 @@ export class EditCourseDialogComponent {
   }
 
   onSave() {
-
     const course: Course = {
       ...this.course,
       ...this.form.value
     };
 
-    this.coursesService.saveCourse(course.id, course)
+    const update: Update<Course> = {
+      id: course.id,
+      changes: course
+    };
+
+    this.store.dispatch(courseUpdate({ update }));
+
+    this.dialogRef.close();
+    /* this.coursesService.saveCourse(course.id, course)
       .subscribe(
         () => this.dialogRef.close()
-      )
-
-
+      ) */
   }
-
-
 }
